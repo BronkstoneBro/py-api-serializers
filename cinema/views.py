@@ -6,9 +6,9 @@ from cinema.serializers import (
     ActorSerializer,
     CinemaHallSerializer,
     MovieSerializer,
-    MovieSessionSerializer,
     MovieListSerializer,
     MovieDetailSerializer,
+    MovieSessionSerializer,
     MovieSessionListSerializer,
     MovieSessionDetailSerializer,
     CinemaHallDetailSerializer,
@@ -31,7 +31,6 @@ class CinemaHallViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == "retrieve":
             return CinemaHallDetailSerializer
-
         return CinemaHallSerializer
 
 
@@ -39,19 +38,16 @@ class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.all()
 
     def get_queryset(self):
-        if self.action == "list":
-            return Movie.objects.all().prefetch_related("genres", "actors")
-        elif self.action == "retrieve":
-            return Movie.objects.all().prefetch_related("genres", "actors")
-
-        return Movie.objects.all()
+        queryset = self.queryset
+        if self.action in ["list", "retrieve"]:
+            queryset = queryset.prefetch_related("genres", "actors")
+        return queryset
 
     def get_serializer_class(self):
         if self.action == "list":
             return MovieListSerializer
         elif self.action == "retrieve":
             return MovieDetailSerializer
-
         return MovieSerializer
 
 
@@ -59,17 +55,14 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
     queryset = MovieSession.objects.all()
 
     def get_queryset(self):
+        queryset = self.queryset
         if self.action == "retrieve":
-            return MovieSession.objects.all().select_related(
-                "movie", "cinema_hall"
-            )
-
-        return MovieSession.objects.all()
+            queryset = queryset.select_related("movie", "cinema_hall")
+        return queryset
 
     def get_serializer_class(self):
         if self.action == "list":
             return MovieSessionListSerializer
         elif self.action == "retrieve":
             return MovieSessionDetailSerializer
-
         return MovieSessionSerializer
